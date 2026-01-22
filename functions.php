@@ -1,11 +1,41 @@
-<?php include_once('car/customizer.php') ?>
+<?php include_once('car/customizer.php'); ?>
+
+<?php
+if (class_exists("woocommerce")) {
+    include_once('car/cus-woocommerce.php');
+}
+?>
 <?php
 function theme_setup()
 {
     add_theme_support('custom-logo');
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
-    add_theme_support('html5', array('search-form'));
+    add_theme_support('html5', array(
+        'comment-list',
+        'comment-form',
+        'search-form',
+        'gallery',
+        'caption',
+        'style',
+        'script'
+    ));
+    add_theme_support('woocommerce', array(
+        'thumbnail_image_width' => 150,
+        'single_image_width' => 200,
+        'product_grid' => array(
+            'default_rows'    => 10,
+            'min_rows'        => 1,
+            'max_rows'        => 3,
+            'default_columns' => 10,
+            'min_columns' => 2,
+            'max_columns' => 3
+        )
+    ));
+    add_theme_support('custom-background');
+    add_theme_support('wc-product-gallery-zoom');
+    add_theme_support('wc-product-gallery-lightbox');
+    add_theme_support('wc-product-gallery-slider');
 }
 add_action('after_setup_theme', 'theme_setup');
 
@@ -32,10 +62,37 @@ function register_menu()
 }
 add_action('init', 'register_menu');
 
-function exclude_pages_from_search($query)
+// function exclude_pages_from_search($query)
+// {
+//     if ($query->is_search && !is_admin()) {
+//         $query->set('post_type', 'post');
+//     }
+// }
+// add_action('pre_get_posts', 'exclude_pages_from_search');
+
+// function search_products_and_posts($query)
+// {
+//     if (!is_admin() && $query->is_main_query() && $query->is_search()) {
+//         $query->set('post_type', array('post', 'product'));
+//     }
+// }
+// add_action('pre_get_posts', 'search_products_and_posts');
+
+
+/**
+ * Show cart contents / total Ajax
+ */
+add_filter('woocommerce_add_to_cart_fragments', 'woocommerce_header_add_to_cart_fragment');
+
+function woocommerce_header_add_to_cart_fragment($fragments)
 {
-    if ($query->is_search && !is_admin()) {
-        $query->set('post_type', 'post');
-    }
+    global $woocommerce;
+
+    ob_start();
+
+?>
+    <span class="items-count"><?php echo WC()->cart->get_cart_contents_count(); ?></span>
+<?php
+    $fragments['span.items-count'] = ob_get_clean();
+    return $fragments;
 }
-add_action('pre_get_posts', 'exclude_pages_from_search');
